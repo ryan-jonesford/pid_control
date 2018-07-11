@@ -41,9 +41,9 @@ Tips for setting up your environment can be found [here](https://classroom.udaci
 
 I first manually tuned the steering to have these values: 
 
-  K_p = .07
-  K_i = 0.001
-  K_d =10
+	  K_p = .07
+	  K_i = 0.001
+	  K_d =10
 
 I arrived at these values by first setting the integral and derivative coefficients to 0 and slowly changed the proportional coefficient until the car started oscillating without the oscillations seeming like they were getting bigger. This happens because the proportional coefficient (aka gain) of the system is proportional to the error; the higher the error, the higher the correction. Because the output lags the input of our system we can easily get into oscillations.
 
