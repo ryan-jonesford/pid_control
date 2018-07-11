@@ -1,28 +1,18 @@
 #ifndef PID_H
 #define PID_H
+#include <vector>
 
 class PID {
    public:
     /*
      * Errors
      */
-    double p_error_;
-    double i_error_;
-    double d_error_;
+    std::vector<double> error_;
 
     /*
      * Coefficients
      */
-    double Kp_;
-    double Ki_;
-    double Kd_;
-
-    double Dp_;
-    double Di_;
-    double Dd_;
-
-    double tolerance_; 
-
+    std::vector<double> K_;
     /*
      * Constructor
      */
@@ -42,16 +32,6 @@ class PID {
      * Run a single step of the PID controller
      */
     double step(double cte);
-
-    /*
-     * Adjust the coefficients using the twiddle algorithm
-     */
-    bool twiddle(double tolerance, int steps, double cte);
-
-   private:
-    int count_;
-    bool twiddle_active;
-    double best_cte_;
 };
 
 #endif /* PID_H */

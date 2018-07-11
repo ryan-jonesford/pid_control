@@ -37,62 +37,32 @@ There's an experimental patch for windows in this [PR](https://github.com/udacit
 
 Tips for setting up your environment can be found [here](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/0949fca6-b379-42af-a919-ee50aa304e6a/lessons/f758c44c-5e40-4e01-93b5-1a82aa4e044f/concepts/23d376c7-0195-4276-bdf0-e02f1f3c665d)
 
-## Editor Settings
+## PID Tuning and Opimization
 
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
+I first manually tuned the steering to have these values: 
 
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
+  K_p = .07
+  K_i = 0.001
+  K_d =10
 
-## Code Style
+I arrived at these values by first setting the integral and derivative coefficients to 0 and slowly changed the proportional coefficient until the car started oscillating without the oscillations seeming like they were getting bigger. This happens because the proportional coefficient (aka gain) of the system is proportional to the error; the higher the error, the higher the correction. Because the output lags the input of our system we can easily get into oscillations.
 
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
+To dampen these oscillations I then tuned the derivative coefficient until the oscillations disappeared. 
+Once the oscillations were controlled the only thing left was to remove the stead-state offset. Using print statements I could see that the CTE was always off by a small fixed amount and adjusted the integral coefficient until this offset was minimized. 
 
-## Project Instructions and Rubric
+After manually tuning the PID I used the Twiddle algorithm to better optimize the PID coefficients. First I used it to optimized for a low CTE for 750 samples at a speed set point of 35mph. After the optimization at this level I increased the speed set point and did it again. 
 
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
+Finally I changed the criteria for Twiddle to use the number of data-points that were collected before the car’s CTE exceeded 2, a value that I determined means the car has gone off (or close to off) the track. The final values that I ended with are:
 
-More information is only accessible by people who are already enrolled in Term 2
-of CarND. If you are enrolled, see [the project page](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/f1820894-8322-4bb3-81aa-b26b3c6dcbaf/lessons/e8235395-22dd-4b87-88e0-d108c5e5bbf4/concepts/6a4d8d42-6a04-4aa6-b284-1697c0fd6562)
-for instructions and the project rubric.
+	K_p = 0.174175 
+	K_i =  0.00014839
+	K_d = 9.03749
 
-## Hints!
+with a speed set-point of 60mph.
 
-* You don't have to follow this directory structure, but if you do, your work
-  will span all of the .cpp files here. Keep an eye out for TODOs.
+A small hack I put in is, if the car’s CTE is more than 1, is to quickly reduce the speed set-point, keeping the car on the track when traversing a corner at unsafe speeds. 
 
-## Call for IDE Profiles Pull Requests
+## Throttle PID
 
-Help your fellow students!
-
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to we ensure
-that students don't feel pressured to use one IDE or another.
-
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
-
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
-
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
-
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
-
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+The throttle PID controller I determined a different way. Using a cruise control model, I determined a transfer function, and used GNU Ovtave to determine a suitable step response. The cruise control model I used was M*dv/dt(t) + b*v(t) = u(t). This gives a transfer function of 1/(Ms+b) in the s-domain. I perused the source code of the simulator and found the set characteristics of the vehicle for this course; the mass M = 1000kg and the viscous friction coefficient b = .1. The code for this can be found in pid_tuning.m.
 
